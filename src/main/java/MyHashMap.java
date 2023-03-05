@@ -15,76 +15,73 @@ public class MyHashMap<K, V> {
         }
     }
 
-    private int capacity = 5;
-    private Node<K, V>[] buckets = new Node[capacity];
+  //  private int capacity = 5;
+
+    private static final int DEFAULT_CAPACITY = 5;
+    private Node<K, V>[] buckets = new Node[DEFAULT_CAPACITY];
 
     private int size = 0;
 
 
     public void resizeMap() {
-        capacity *= 2;
+       int capacity = buckets.length *2;
         Node<K, V>[] oldBucket = Arrays.copyOf(buckets, buckets.length);
         buckets = new Node[capacity];
         for (Node<K, V> node : oldBucket) {
             while (node != null) {
-                put(node.key, node.value);
+                addItems(node.key, node.value);
                 node = node.next;
             }
         }
     }
-
 
     public void put(K key, V value) {
-        if (size == capacity) {
+        addItems(key, value);
+        if (size >= buckets.length) {
             resizeMap();
         }
-
-        int index = Math.abs(key.hashCode() % capacity);
-        Node<K, V> node = buckets[index];
-        Node<K, V> newNode = new Node<>(key, value);
-
-        if (node == null) {
-            buckets[index] = newNode;
-        } else {
-            Node<K, V> prev = node;
-            while (node != null) {
-                if (key == null || node.key.equals(key)) {
-                    node.value = value;
+        size++;
+    }
+    public void addItems(K key, V value) {
+        Node<K,V>newNode=new Node<>(key, value);
+        int hashIndex = Math.abs(key.hashCode()) % buckets.length;
+        if (buckets[hashIndex]==null){
+            buckets[hashIndex]= newNode;
+        }else{
+            Node<K,V>prev=null;
+            Node<K,V>current = buckets[hashIndex];
+            while (current!=null){
+                if (current.key.equals(key)){
+                    current.value=value;
+                    size--;
                     return;
                 }
-                prev = node;
-                node = node.next;
+                prev=current;
+                current=current.next;
+                if (prev!=null){
+                    prev.next=newNode;
+                }
             }
-            prev.next = newNode;
         }
-        size++;
-
     }
 
-
-    public V remove(K key) {
-        int hashIndex = Math.abs(key.hashCode()) % capacity;
+    public void remove(K key) {
+        int hashIndex = Math.abs(key.hashCode()) % buckets.length;
         Node removeNode = buckets[hashIndex];
 
         if (removeNode == null) {
-            return null;
+            return;
         }
-
         while (removeNode != null){
             if (removeNode.key.equals(key)) {
                 buckets[hashIndex] = removeNode.next;
                 size--;
-                return (V) removeNode.value;
             }
             removeNode = removeNode.next;
         }
-//
-       return (V) key;
     }
-
     public void clear() {
-        capacity = 16;
-        buckets = new Node[capacity];
+        buckets = new Node[DEFAULT_CAPACITY];
         size = 0;
     }
 
@@ -93,7 +90,20 @@ public class MyHashMap<K, V> {
     }
 
     public V get(K key) {
-        int index = Math.abs(key.hashCode() % capacity);
+        int index = Math.abs(key.hashCode() % buckets.length);
+        Node node = buckets[index];
+
+        if (node == null) {
+            return null;
+        }
+
+        while (node != null){
+            if (node.key.equals(key)) {
+            return (V) node.value;
+
+            }
+            node = node.next;
+        }
         return buckets[index].value;
 
     }
@@ -101,33 +111,20 @@ public class MyHashMap<K, V> {
     @Override
     public String toString() {
         return "MyHashMap{" +
-                "capacity=" + capacity +
-                ", buckets=" + Arrays.toString(buckets) +
-                ", size=" + size +
+                "buckets=" + Arrays.toString(buckets) +
                 '}';
     }
 
     public static void main(String[] args) {
         MyHashMap<String, Integer> myHashMap = new MyHashMap();
-        myHashMap.put("name", 1);
-        myHashMap.put("name1", 2);
-        myHashMap.put("name2", 3);
-        myHashMap.put("name3", 4);
-        myHashMap.put("name3", 5);
-        myHashMap.put("name", 6);
-        myHashMap.put("name5", 7);
-        myHashMap.put("name6", 8);
-        myHashMap.put("name7", 9);
-        myHashMap.put("name8", 10);
-        //myHashMap.put("name",  6);
-        myHashMap.put("name9", 11);
-        myHashMap.put("name10", 12);
+        for (int i = 0; i < 20; i++) {
+            myHashMap.put("name"+i,i);
+        }
         System.out.println("myHashMap.size() = " + myHashMap.size());
         System.out.println("myHashMap.get(\"name\") = " + myHashMap.get("name"));
-        System.out.println("myHashMap.remove() = " + myHashMap.remove("name2"));
-         myHashMap.clear();
-
-
-
+        myHashMap.remove("name2");
+        System.out.println("myHashMap.get(\"name\") = " + myHashMap.get("name"));
+        System.out.println("myHashMap.size() = " + myHashMap.size());
+        myHashMap.clear();
     }
 }
